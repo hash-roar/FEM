@@ -39,3 +39,7 @@
 
 # debug information files
 *.dwo
+
+# XMake cache and build files
+.xmake/
+build/
