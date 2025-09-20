@@ -2,6 +2,7 @@
 #pragma once
 #include "fem_mesh.hh"
 #include <filesystem> // 使用C++17的文件系统库
+#include <optional>
 #include <string>
 
 namespace fem {
@@ -9,16 +10,33 @@ namespace fem {
 class MeshLoader
 {
 public:
-  /**
-   * @brief 从MATLAB PDE工具箱格式的文件中加载网格。
-   *
-   * @param p_path 指向节点坐标文件 (e.g., "mesh.p.dat") 的路径。
-   * @param t_path 指向单元拓扑文件 (e.g., "mesh.t.dat") 的路径。
-   * @return std::shared_ptr<Mesh> 指向新创建的Mesh对象的智能指针。
-   * @throws std::runtime_error 如果文件无法打开或格式不正确。
-   */
-  static std::shared_ptr<Mesh> loadFromMatlab( const std::filesystem::path& p_path,
-                                               const std::filesystem::path& t_path );
+  std::shared_ptr<Mesh> loadFromMatlab( const std::filesystem::path& p_path, const std::filesystem::path& t_path );
+
+private:
+  template<typename... Args, std::size_t... I>
+  std::optional<std::tuple<Args...>> parseLine_impl( const std::string& line, std::index_sequence<I...> /*unused*/ )
+  {
+    std::stringstream ss( line );
+    std::tuple<Args...> values;
+
+    if ( ( ( ss >> std::get<I>( values ) ) && ... ) ) {
+
+      if ( ss.rdbuf()->in_avail() == 0 ) {
+        return values;
+      }
+    }
+    return std::nullopt;
+  }
+
+  template<typename... Args>
+  std::optional<std::tuple<Args...>> parseLine( const std::string& line )
+  {
+
+    return parseLine_impl<Args...>( line, std::index_sequence_for<Args...> {} );
+  }
+
+  void loadNodes( Mesh& mesh, const std::filesystem::path& path );
+  void loadElements( Mesh& mesh, const std::filesystem::path& path );
 };
 
 } // namespace fem

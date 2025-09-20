@@ -45,7 +45,7 @@ class Mesh
 {
 public:
   std::vector<Node> nodes;
-  // todo: make dense memory storage
+  // todo: make dense memory
   std::vector<std::unique_ptr<IElement>> elements;
 
   // 辅助函数
